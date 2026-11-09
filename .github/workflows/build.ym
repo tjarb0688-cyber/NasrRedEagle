@@ -17,16 +17,17 @@ jobs:
         with:
           python-version: '3.11'
 
-      - name: Install dependencies
+      - name: Install system dependencies
         run: |
-          pip install --upgrade pip
-          pip install buildozer cython
           sudo apt-get update
           sudo apt-get install -y python3-pip build-essential git python3-dev ffmpeg zlib1g-dev libzip-dev liblzma-dev
 
-      - name: Install Kivy and Dependencies
+      - name: Install Python dependencies
         run: |
-          pip install kivy[kbase] kivy-deps-sdl2 kivy-deps-glew
+          pip install --upgrade pip
+          pip install buildozer cython
+          # تثبيت Kivy مع جميع تبعياتها الأساسية (SDL2, Glew, etc.)
+          pip install kivy[kde] 
 
       - name: Build APK
         run: |
