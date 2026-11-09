@@ -13,7 +13,6 @@ package.domain = org.nasrredeagle
 source.dir = .
 
 # (list) Application requirements
-# comma separated e.g. requirements = sqlite3, kivy
 requirements = python3,kivy
 
 # (str) Supported Android API level to use.
@@ -28,20 +27,11 @@ android.ndk = 25b
 # (bool) Indicate if the application should be fullscreen or not
 fullscreen = 0
 
-# Put your public URL in this field if you have one
-# url = https://example.com
-
 # (int) Android application version code
 version.code = 1
 
 # (str) Version string
-version.string = 1.0
-
-# (str) Icon
-# icon = icons/icon.png
-
-# (list) Permissions
-# android.permissions = INTERNET
+version.version = 1.0
 
 [buildozer]
 
