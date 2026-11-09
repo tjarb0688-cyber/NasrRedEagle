@@ -29,20 +29,31 @@ jobs:
           pip install buildozer cython
           pip install kivy[kde] 
 
-      - name: Create buildozer.spec if missing
+      - name: Generate buildozer.spec
         run: |
-          # إذا لم يكن الملف موجودًا، قم بإنشاء نسخة افتراضية
+          # التأكد من أننا في المجلد الصحيح
+          cd ${{ github.workspace }}
+          # محاولة إنشاء الملف، وإذا فشل نقوم بإنشائه يدويًا كبديل
           if [ ! -f "buildozer.spec" ]; then
-            echo "Creating default buildozer.spec..."
-            buildozer init
+            echo "Creating default spec..."
+            buildozer init || true
           fi
+          # طباعة الملفات للتأكد
+          ls -la
 
       - name: Build APK
         run: |
-          buildozer android debug
+          cd ${{ github.workspace }}
+          # التأكد من وجود الملف قبل البدء
+          if [ -f "buildozer.spec" ]; then
+            buildozer android debug
+          else
+            echo "Error: buildozer.spec still missing!"
+            exit 1
+          fi
 
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
         with:
           name: NasrRedEagle-APK
-          path: bin/*.apk
+          path:
