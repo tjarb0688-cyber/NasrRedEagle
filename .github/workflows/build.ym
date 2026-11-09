@@ -8,6 +8,7 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -26,8 +27,15 @@ jobs:
         run: |
           pip install --upgrade pip
           pip install buildozer cython
-          # تثبيت Kivy مع جميع تبعياتها الأساسية (SDL2, Glew, etc.)
           pip install kivy[kde] 
+
+      - name: Create buildozer.spec if missing
+        run: |
+          # إذا لم يكن الملف موجودًا، قم بإنشاء نسخة افتراضية
+          if [ ! -f "buildozer.spec" ]; then
+            echo "Creating default buildozer.spec..."
+            buildozer init
+          fi
 
       - name: Build APK
         run: |
