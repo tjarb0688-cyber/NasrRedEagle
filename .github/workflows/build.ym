@@ -24,9 +24,12 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y python3-pip build-essential git python3-dev ffmpeg zlib1g-dev libzip-dev liblzma-dev
 
+      - name: Install Kivy and Dependencies
+        run: |
+          pip install kivy[kbase] kivy-deps-sdl2 kivy-deps-glew
+
       - name: Build APK
         run: |
-          pip install kivy-deps.khrplatform kivy-deps.gles_khr
           buildozer android debug
 
       - name: Upload Artifact
