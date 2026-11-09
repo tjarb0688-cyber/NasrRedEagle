@@ -10,27 +10,27 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Set up Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
           python-version: '3.11'
 
       - name: Install dependencies
         run: |
+          pip install --upgrade pip
           pip install buildozer cython
           sudo apt-get update
           sudo apt-get install -y python3-pip build-essential git python3-dev ffmpeg zlib1g-dev libzip-dev liblzma-dev
 
       - name: Build APK
         run: |
-          # تحميل أداة بناء أندرويد الخاصة بـ Kivy
           pip install kivy-deps.khrplatform kivy-deps.gles_khr
           buildozer android debug
 
       - name: Upload Artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: NasrRedEagle-APK
           path: bin/*.apk
