@@ -29,25 +29,26 @@ jobs:
           pip install buildozer cython
           pip install kivy[kde] 
 
+      - name: Clean Old Build State
+        # حذف المجلد القديم لضمان عدم وجود تعارضات مع الإصدارات السابقة
+        run: |
+          rm -rf .buildozer
+
       - name: Accept Android SDK Licenses
         run: |
-          # إنشاء مجلد التراخيص
-          mkdir -p ~/.android
-          
-          # كتابة معرف المستودع
-          echo "8933bad161af4178b1185d1a37fbf4dbfa52c9cc" > ~/.android/repositories.cfg
-          
-          # تحديد مسار SDK الخاص بـ buildozer
           export ANDROID_HOME="$HOME/.buildozer/android/platform/android-sdk"
           
-          # قبول جميع التراخيص المتاحة مسبقًا
+          # التأكد من وجود أدوات البناء الأساسية أولاً
+          cd ${{ github.workspace }}
+          buildozer android debug prepare || true
+          
+          # قبول التراخيص باستخدام yes
           yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses || true
 
       - name: Prepare Build Environment
         run: |
           cd ${{ github.workspace }}
-          # تنظيف أي حالة سابقة قد تسبب تعارضًا
-          rm -rf .buildozer
+          # إعادة التحضير للتأكد من تحميل الأدوات المطلوبة (Aidl, Build-tools 33.0.0)
           buildozer android debug prepare
 
       - name: Build APK
