@@ -29,7 +29,7 @@ jobs:
           pip install buildozer cython
           pip install kivy[kde] 
 
-      - name: Download and Prepare Android SDK
+      - name: Download and Accept Android SDK Licenses
         run: |
           export ANDROID_HOME="$HOME/.buildozer/android/platform/android-sdk"
           
@@ -46,21 +46,31 @@ jobs:
           # قبول جميع التراخيص فورًا
           yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses > /dev/null 2>&1 || true
 
-      - name: Install Specific SDK Packages
+      - name: Install Required SDK Packages & Link to Buildozer
         run: |
           export ANDROID_HOME="$HOME/.buildozer/android/platform/android-sdk"
+          BUILDTOOLS_DIR="$ANDROID_HOME/build-tools"
           
-          # تثبيت الإصدارات المحددة التي نعرف أنها تعمل
+          # تثبيت الحزم المطلوبة
           $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager "platforms;android-33" "build-tools;34.0.0" "platform-tools"
+          
+          # التأكد من وجود مجلد build-tools في مكان buildozer يتوقعه
+          mkdir -p "$BUILDTOOLS_DIR"
+          
+          # نسخ أدوات البناء (بما فيها aidl) إلى المجلد الذي يبحث عنه buildozer
+          cp -r "$ANDROID_HOME/build-tools/34.0.0"/* "$BUILDTOOLS_DIR/" 2>/dev/null || true
+          # إذا كان المجلد فارغًا بعد النسخ، نحاول ربطه مباشرة
+          if [ ! -f "$BUILDTOOLS_DIR/aidl" ]; then
+             ln -sf "$ANDROID_HOME/build-tools/34.0.0/aidl" "$BUILDTOOLS_DIR/aidl"
+          fi
 
-      - name: Clean Old Build State
+      - name: Clean Old State
         run: |
           rm -rf .buildozer bin
 
       - name: Prepare Build Environment
         run: |
           cd ${{ github.workspace }}
-          # الآن buildozer سيجد الأدوات موجودة وسيعمل بسلاسة
           buildozer android debug prepare
 
       - name: Build APK
