@@ -1,79 +1,48 @@
-name: Build Android APK
+[app]
 
-on:
-  push:
-    branches: [ main ]
-  workflow_dispatch:
+# (str) Title of your application
+title = Nasr Red Eagle
 
-jobs:
-  build:
-    runs-on: ubuntu-latest
-    
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+# (str) Package name
+package.name = nasrredeagle
 
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.11'
+# (str) Package domain (needed for android/ios packaging)
+package.domain = org.nasrredeagle
 
-      - name: Install system dependencies
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y python3-pip build-essential git python3-dev ffmpeg zlib1g-dev libzip-dev liblzma-dev openjdk-17-jdk-headless
+# (str) Source code where the main app live
+source.dir = .
 
-      - name: Install Python dependencies
-        run: |
-          pip install --upgrade pip
-          pip install buildozer cython
-          pip install kivy[kde] 
+# (list) Application requirements
+requirements = python3,kivy
 
-      - name: Download and Accept Android SDK Licenses
-        run: |
-          # تثبيت أدوات سطر الأوامر الخاصة بـ Android
-          export ANDROID_HOME="$HOME/.buildozer/android/platform/android-sdk"
-          
-          # إنشاء المجلدات الأساسية
-          mkdir -p "$ANDROID_HOME/cmdline-tools"
-          cd "$ANDROID_HOME/cmdline-tools"
-          
-          # تنزيل أحدث إصدار من cmdline-tools
-          wget https://dl.google.com/android/repository/commandlinetools-linux-9477386_latest.zip -O cmdtools.zip
-          unzip -q cmdtools.zip -d temp_unzip
-          mv temp_unzip/cmdline-tools latest
-          rm -rf temp_unzip cmdtools.zip
-          
-          # قبول جميع التراخيص
-          yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses > /dev/null 2>&1 || true
+# (str) Supported Android API level to use.
+android.api = 33
 
-      - name: Install Required SDK Packages
-        run: |
-          export ANDROID_HOME="$HOME/.buildozer/android/platform/android-sdk"
-          
-          # تثبيت الحزم الأساسية التي تسبب عادة مشاكل التراخيص
-          $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager "platforms;android-33" "build-tools;34.0.0" "platform-tools"
-          
-          # التأكد من وجود AIDL
-          $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager "build-tools;34.0.0"
+# (str) Minimum Android SDK version to use
+android.minapi = 21
 
-      - name: Clean Old State
-        run: |
-          rm -rf .buildozer bin
+# (str) Android NDK version to use
+android.ndk = 25b
 
-      - name: Prepare Build Environment
-        run: |
-          cd ${{ github.workspace }}
-          # الآن buildozer سيجد الأدوات موجودة وسيبدأ في تهيئة البيئة
-          buildozer android debug prepare
+# (bool) Indicate if the application should be fullscreen or not
+fullscreen = 0
 
-      - name: Build APK
-        run: |
-          cd ${{ github.workspace }}
-          buildozer android debug
+# (int) Version code
+version.code = 1
 
-      - name: Upload Artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: NasrRedEagle-APK
-          path: bin/*.apk
+# (str) Version string
+version = 1.0
+
+# (str) Build tools version
+android.build_tools_version = 34.0.0
+
+[buildozer]
+
+# (int) Log level (0=error only, 1=info, 2=debug)
+log_level = 2
+
+# (str) Path to build artifact storage
+bin_dir = bin
+
+# (str) Path to cache directory
+cache_dir = .buildozer
