@@ -34,8 +34,7 @@ version.code = 1
 version = 1.0
 
 # (str) Build tools version (Fixed to avoid license issues with v37)
-android.build_tools_version = 33.0.0
-
+android.build_tools_version = 34.0.0
 [buildozer]
 
 # (int) Log level (0=error only, 1=info, 2=debug)
