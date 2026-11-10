@@ -1,45 +1,63 @@
-[app]
+name: Build Android APK
 
-# (str) Title of your application
-title = Nasr Red Eagle
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
 
-# (str) Package name
-package.name = nasrredeagle
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-# (str) Package domain (needed for android/ios packaging)
-package.domain = org.nasrredeagle
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
 
-# (str) Source code where the main app live
-source.dir = .
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y python3-pip build-essential git python3-dev ffmpeg zlib1g-dev libzip-dev liblzma-dev openjdk-17-jdk-headless
 
-# (list) Application requirements
-requirements = python3,kivy
+      - name: Install Python dependencies
+        run: |
+          pip install --upgrade pip
+          pip install buildozer cython
+          pip install kivy[kde] 
 
-# (str) Supported Android API level to use.
-android.api = 33
+      - name: Accept Android SDK Licenses
+        # هذه الخطوة ضرورية لقبول تراخيص Google و Android قبل البناء
+        run: |
+          mkdir -p ~/.android
+          echo "8933bad161af4178b1185d1a37fbf4dbfa52c9cc" > ~/.android/repositories.cfg
+          
+          # قبول جميع التراخيص الشائعة باستخدام أداة sdkmanager
+          yes | ${ANDROID_HOME}/cmdline-tools/latest/bin/sdkmanager --licenses || true
+          
+          # إذا لم يكن ANDROID_HOME معرفًا، نستخدم المسار الافتراضي لبنوزر
+          if [ ! -d "${ANDROID_HOME}" ]; then
+            export ANDROID_HOME="$HOME/.buildozer/android/platform/android-sdk"
+          fi
+          
+          # قبول التراخيص عبر الإخراج القياسي
+          echo y | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses
 
-# (str) Minimum Android SDK version to use
-android.minapi = 21
+      - name: Prepare Build Environment
+        run: |
+          cd ${{ github.workspace }}
+          buildozer android debug prepare
 
-# (str) Android NDK version to use
-android.ndk = 25b
+      - name: Build APK
+        run: |
+          cd ${{ github.workspace }}
+          buildozer android debug
 
-# (bool) Indicate if the application should be fullscreen or not
-fullscreen = 0
-
-# (int) Version code
-version.code = 1
-
-# (str) Version string
-version = 1.0
-
-[buildozer]
-
-# (int) Log level (0=error only, 1=info, 2=debug)
-log_level = 2
-
-# (str) Path to build artifact storage
-bin_dir = bin
-
-# (str) Path to cache directory
-cache_dir = .buildozer
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: NasrRedEagle-APK
+          path: bin/*.apk
