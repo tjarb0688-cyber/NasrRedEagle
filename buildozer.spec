@@ -1,47 +1,45 @@
-name: Build Android APK
+[app]
 
-on:
-  push:
-    branches: [ main ]
-  workflow_dispatch:
+# (str) Title of your application
+title = Nasr Red Eagle
 
-jobs:
-  build:
-    runs-on: ubuntu-latest
-    
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+# (str) Package name
+package.name = nasrredeagle
 
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.11'
+# (str) Package domain (needed for android/ios packaging)
+package.domain = org.nasrredeagle
 
-      - name: Install system dependencies
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y python3-pip build-essential git python3-dev ffmpeg zlib1g-dev libzip-dev liblzma-dev openjdk-17-jdk-headless
+# (str) Source code where the main app live
+source.dir = .
 
-      - name: Install Python dependencies
-        run: |
-          pip install --upgrade pip
-          pip install buildozer cython
-          pip install kivy[kde] 
+# (list) Application requirements
+requirements = python3,kivy
 
-      - name: Prepare Build Environment
-        # هذه الخطوة ضرورية لتحميل SDK و NDK وإنشاء المجلدات المطلوبة
-        run: |
-          cd ${{ github.workspace }}
-          buildozer android debug prepare
+# (str) Supported Android API level to use.
+android.api = 33
 
-      - name: Build APK
-        run: |
-          cd ${{ github.workspace }}
-          buildozer android debug
+# (str) Minimum Android SDK version to use
+android.minapi = 21
 
-      - name: Upload Artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: NasrRedEagle-APK
-          path: bin/*.apk
+# (str) Android NDK version to use
+android.ndk = 25b
+
+# (bool) Indicate if the application should be fullscreen or not
+fullscreen = 0
+
+# (int) Version code
+version.code = 1
+
+# (str) Version string
+version = 1.0
+
+[buildozer]
+
+# (int) Log level (0=error only, 1=info, 2=debug)
+log_level = 2
+
+# (str) Path to build artifact storage
+bin_dir = bin
+
+# (str) Path to cache directory
+cache_dir = .buildozer
