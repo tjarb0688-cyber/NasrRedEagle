@@ -29,27 +29,29 @@ jobs:
           pip install buildozer cython
           pip install kivy[kde] 
 
-      - name: Clean Everything
-        # حذف مجلد العمل بالكامل لضمان عدم وجود ملفات قديمة
-        run: |
-          rm -rf .buildozer
-          rm -rf bin
-
-      - name: Accept Android SDK Licenses
+      - name: Download and Accept Android SDK Licenses
         run: |
           export ANDROID_HOME="$HOME/.buildozer/android/platform/android-sdk"
-          
-          # تشغيل prepare أولًا لتحميل الأدوات الأساسية
-          cd ${{ github.workspace }}
-          buildozer android debug prepare || true
-          
-          # قبول التراخيص
-          yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses || true
+          mkdir -p "$ANDROID_HOME/cmdline-tools"
+          cd "$ANDROID_HOME/cmdline-tools"
+          wget https://dl.google.com/android/repository/commandlinetools-linux-9477386_latest.zip -O cmdtools.zip
+          unzip -q cmdtools.zip -d temp_unzip
+          mv temp_unzip/cmdline-tools latest
+          rm -rf temp_unzip cmdtools.zip
+          yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses > /dev/null 2>&1 || true
+
+      - name: Install Required SDK Packages
+        run: |
+          export ANDROID_HOME="$HOME/.buildozer/android/platform/android-sdk"
+          $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager "platforms;android-33" "build-tools;34.0.0" "platform-tools"
+
+      - name: Clean Old State
+        run: |
+          rm -rf .buildozer bin
 
       - name: Prepare Build Environment
         run: |
           cd ${{ github.workspace }}
-          # التأكد من تحميل الأدوات المطلوبة
           buildozer android debug prepare
 
       - name: Build APK
