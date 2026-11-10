@@ -1,48 +1,87 @@
-[app]
+name: Build Android APK
 
-# (str) Title of your application
-title = Nasr Red Eagle
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
 
-# (str) Package name
-package.name = nasrredeagle
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-# (str) Package domain (needed for android/ios packaging)
-package.domain = org.nasrredeagle
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
 
-# (str) Source code where the main app live
-source.dir = .
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y python3-pip build-essential git python3-dev ffmpeg zlib1g-dev libzip-dev liblzma-dev openjdk-17-jdk-headless
 
-# (list) Application requirements
-requirements = python3,kivy
+      - name: Install Python dependencies
+        run: |
+          pip install --upgrade pip
+          pip install buildozer cython
+          pip install kivy[kde] 
 
-# (str) Supported Android API level to use.
-android.api = 33
+      - name: Download and Accept Android SDK Licenses
+        run: |
+          export ANDROID_HOME="$HOME/.buildozer/android/platform/android-sdk"
+          
+          # إنشاء مجلدات الـ SDK الأساسية
+          mkdir -p "$ANDROID_HOME/cmdline-tools"
+          cd "$ANDROID_HOME/cmdline-tools"
+          
+          # تنزيل أحدث إصدار من command-line tools
+          wget https://dl.google.com/android/repository/commandlinetools-linux-9477386_latest.zip -O cmdtools.zip
+          unzip -q cmdtools.zip -d temp_unzip
+          mv temp_unzip/cmdline-tools latest
+          rm -rf temp_unzip cmdtools.zip
+          
+          # قبول جميع التراخيص فورًا
+          yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses > /dev/null 2>&1 || true
 
-# (str) Minimum Android SDK version to use
-android.minapi = 21
+      - name: Install Required SDK Packages & Fix Aidl Path
+        run: |
+          export ANDROID_HOME="$HOME/.buildozer/android/platform/android-sdk"
+          BUILDTOOLS_DIR="$ANDROID_HOME/build-tools"
+          
+          # تثبيت الحزم المطلوبة
+          $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager "platforms;android-33" "build-tools;34.0.0" "platform-tools"
+          
+          # التأكد من وجود مجلد build-tools
+          mkdir -p "$BUILDTOOLS_DIR"
+          
+          # نسخ الملفات الأساسية التي يحتاجها buildozer (بما فيها aidl) إلى المجلد الرئيسي
+          # buildozer يبحث عن aidl في جذر build-tools، وليس في مجلد فرعي
+          cp -r "$ANDROID_HOME/build-tools/34.0.0/"* "$BUILDTOOLS_DIR/" 2>/dev/null || true
+          
+          # إذا لم يتم النسخ بنجاح، نقوم بإنشاء رابط مباشر
+          if [ ! -f "$BUILDTOOLS_DIR/aidl" ]; then
+             ln -sf "$ANDROID_HOME/build-tools/34.0.0/aidl" "$BUILDTOOLS_DIR/aidl"
+          fi
 
-# (str) Android NDK version to use
-android.ndk = 25b
+      - name: Clean Old State
+        run: |
+          rm -rf .buildozer bin
 
-# (bool) Indicate if the application should be fullscreen or not
-fullscreen = 0
+      - name: Prepare Build Environment
+        run: |
+          cd ${{ github.workspace }}
+          buildozer android debug prepare
 
-# (int) Version code
-version.code = 1
+      - name: Build APK
+        run: |
+          cd ${{ github.workspace }}
+          buildozer android debug
 
-# (str) Version string
-version = 1.0
-
-# (str) Build tools version
-android.build_tools_version = 34.0.0
-
-[buildozer]
-
-# (int) Log level (0=error only, 1=info, 2=debug)
-log_level = 2
-
-# (str) Path to build artifact storage
-bin_dir = bin
-
-# (str) Path to cache directory
-cache_dir = .buildozer
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: NasrRedEagle-APK
+          path: bin/*.apk
