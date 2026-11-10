@@ -21,7 +21,7 @@ jobs:
       - name: Install system dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y python3-pip build-essential git python3-dev ffmpeg zlib1g-dev libzip-dev liblzma-dev
+          sudo apt-get install -y python3-pip build-essential git python3-dev ffmpeg zlib1g-dev libzip-dev liblzma-dev openjdk-17-jdk-headless
 
       - name: Install Python dependencies
         run: |
@@ -29,11 +29,30 @@ jobs:
           pip install buildozer cython
           pip install kivy[kde] 
 
+      - name: Accept Android SDK Licenses
+        run: |
+          # إنشاء مجلد التراخيص
+          mkdir -p ~/.android
+          
+          # كتابة معرف المستودع
+          echo "8933bad161af4178b1185d1a37fbf4dbfa52c9cc" > ~/.android/repositories.cfg
+          
+          # تحديد مسار SDK الخاص بـ buildozer
+          export ANDROID_HOME="$HOME/.buildozer/android/platform/android-sdk"
+          
+          # قبول جميع التراخيص المتاحة مسبقًا
+          yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses || true
+
+      - name: Prepare Build Environment
+        run: |
+          cd ${{ github.workspace }}
+          # تنظيف أي حالة سابقة قد تسبب تعارضًا
+          rm -rf .buildozer
+          buildozer android debug prepare
+
       - name: Build APK
         run: |
-          # التأكد من أننا في المجلد الصحيح
           cd ${{ github.workspace }}
-          # تشغيل البناء مباشرة لأن الملف موجود مسبقًا
           buildozer android debug
 
       - name: Upload Artifact
