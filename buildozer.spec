@@ -27,11 +27,11 @@ android.ndk = 25b
 # (bool) Indicate if the application should be fullscreen or not
 fullscreen = 0
 
-# (int) Android application version code
+# (int) Version code
 version.code = 1
 
 # (str) Version string
-version.version = 1.0
+version = 1.0
 
 [buildozer]
 
