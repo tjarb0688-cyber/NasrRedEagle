@@ -29,11 +29,11 @@ jobs:
           pip install buildozer cython
           pip install kivy[kde] 
 
-      - name: Download and Accept Android SDK Licenses
+      - name: Setup Android SDK & Accept Licenses
         run: |
           export ANDROID_HOME="$HOME/.buildozer/android/platform/android-sdk"
           
-          # إنشاء مجلدات الـ SDK الأساسية
+          # إنشاء بنية المجلدات الصحيحة
           mkdir -p "$ANDROID_HOME/cmdline-tools"
           cd "$ANDROID_HOME/cmdline-tools"
           
@@ -51,13 +51,14 @@ jobs:
           export ANDROID_HOME="$HOME/.buildozer/android/platform/android-sdk"
           BUILDTOOLS_DIR="$ANDROID_HOME/build-tools"
           
-          # تثبيت الحزم المطلوبة
+          # تثبيت الحزم المطلوبة (المنصات وأدوات البناء)
           $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager "platforms;android-33" "build-tools;34.0.0" "platform-tools"
           
           # التأكد من وجود مجلد build-tools
           mkdir -p "$BUILDTOOLS_DIR"
           
           # نسخ الملفات الأساسية التي يحتاجها buildozer (بما فيها aidl) إلى المجلد الرئيسي
+          # هذا الحل يتجنب مشكلة عدم وجود sdkmanager في المسار القديم
           cp -r "$ANDROID_HOME/build-tools/34.0.0/"* "$BUILDTOOLS_DIR/" 2>/dev/null || true
           
           # إذا لم يتم النسخ بنجاح، نقوم بإنشاء رابط مباشر
