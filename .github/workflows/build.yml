@@ -46,12 +46,12 @@ jobs:
           # قبول جميع التراخيص فورًا
           yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses > /dev/null 2>&1 || true
 
-      - name: Install Required SDK Packages & Fix sdkmanager Path
+      - name: Install Required SDK Packages & Fix Paths
         run: |
           export ANDROID_HOME="$HOME/.buildozer/android/platform/android-sdk"
           BUILDTOOLS_DIR="$ANDROID_HOME/build-tools"
           
-          # تثبيت الحزم المطلوبة (المنصات وأدوات البناء)
+          # تثبيت إصدارات محددة ومستقرة لتجنب أخطاء الإصدارات الجديدة
           $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager "platforms;android-33" "build-tools;34.0.0" "platform-tools"
           
           # التأكد من وجود مجلد build-tools
@@ -65,7 +65,7 @@ jobs:
              ln -sf "$ANDROID_HOME/build-tools/34.0.0/aidl" "$BUILDTOOLS_DIR/aidl"
           fi
 
-          # *** الحل الجذري للمشكلة ***
+          # *** الحل الجذري لمشكلة sdkmanager المسار القديم ***
           # إنشاء مجلد tools/bin إذا لم يكن موجودًا
           mkdir -p "$ANDROID_HOME/tools/bin"
           
