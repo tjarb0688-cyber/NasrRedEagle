@@ -46,7 +46,7 @@ jobs:
           # قبول جميع التراخيص فورًا
           yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses > /dev/null 2>&1 || true
 
-      - name: Install Required SDK Packages & Fix Aidl Path
+      - name: Install Required SDK Packages & Fix sdkmanager Path
         run: |
           export ANDROID_HOME="$HOME/.buildozer/android/platform/android-sdk"
           BUILDTOOLS_DIR="$ANDROID_HOME/build-tools"
@@ -58,13 +58,23 @@ jobs:
           mkdir -p "$BUILDTOOLS_DIR"
           
           # نسخ الملفات الأساسية التي يحتاجها buildozer (بما فيها aidl) إلى المجلد الرئيسي
-          # هذا الحل يتجنب مشكلة عدم وجود sdkmanager في المسار القديم
           cp -r "$ANDROID_HOME/build-tools/34.0.0/"* "$BUILDTOOLS_DIR/" 2>/dev/null || true
           
           # إذا لم يتم النسخ بنجاح، نقوم بإنشاء رابط مباشر
           if [ ! -f "$BUILDTOOLS_DIR/aidl" ]; then
              ln -sf "$ANDROID_HOME/build-tools/34.0.0/aidl" "$BUILDTOOLS_DIR/aidl"
           fi
+
+          # *** الحل الجذري للمشكلة ***
+          # إنشاء مجلد tools/bin إذا لم يكن موجودًا
+          mkdir -p "$ANDROID_HOME/tools/bin"
+          
+          # إنشاء رابط لـ sdkmanager في المسار الذي يبحث عنه buildozer
+          ln -sf "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" "$ANDROID_HOME/tools/bin/sdkmanager"
+          
+          # أيضًا نربط avdmanager و emulator لتجنب مشاكل أخرى
+          ln -sf "$ANDROID_HOME/cmdline-tools/latest/bin/avdmanager" "$ANDROID_HOME/tools/bin/avdmanager" 2>/dev/null || true
+          ln -sf "$ANDROID_HOME/cmdline-tools/latest/bin/emulator" "$ANDROID_HOME/tools/bin/emulator" 2>/dev/null || true
 
       - name: Clean Old State
         run: |
